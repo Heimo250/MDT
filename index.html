@@ -3,840 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT - DoJ & LSPD System</title>
+    <title>Ultimate MDT - DoJ & LSPD</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #1e1e2f;
-            --bg-panel: #27293d;
-            --accent: #e14eca; /* Cyberpunk-ish Pink/Purple for MDT feel */
-            --text-muted: #9a9a9a;
-        }
-        body { background-color: var(--bg-dark); color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { background-color: var(--bg-panel); border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; }
-        .form-control, .form-select { background-color: #1b1c28; border: 1px solid #2b3553; color: white; }
-        .form-control:focus { background-color: #27293d; color: white; border-color: var(--accent); box-shadow: none; }
-        .sidebar { min-height: 100vh; background: linear-gradient(0deg, #ba54f5 0%, #e14eca 100%); padding: 20px; }
-        .nav-link { color: white; font-weight: 500; margin-bottom: 10px; border-radius: 5px; cursor: pointer; }
-        .nav-link:hover, .nav-link.active { background-color: rgba(255,255,255,0.2); }
+        :root { --bg-dark: #12121c; --bg-panel: #1c1c2d; --accent: #e14eca; }
+        body { background-color: var(--bg-dark); color: #fff; font-family: sans-serif; }
+        .sidebar { min-height: 100vh; background: linear-gradient(180deg, #ba54f5, #e14eca); padding: 20px; }
+        .nav-link { color: white; cursor: pointer; margin-bottom: 5px; border-radius: 5px; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.2); }
+        .card { background: var(--bg-panel); border: none; margin-bottom: 20px; }
         .hidden { display: none !important; }
-        .login-container { max-width: 400px; margin: 100px auto; padding: 40px; background: var(--bg-panel); border-radius: 10px; }
-        .badge-wanted { background-color: #ff3b30; }
-        .badge-license { background-color: #4cd964; color: black; }
-        /* Law Table Styles */
-        .law-row:hover { background-color: rgba(255,255,255,0.05); cursor: pointer; }
+        .form-control, .form-select { background: #0f0f1a; border: 1px solid #2b3553; color: white; }
+        .modal { background: rgba(0,0,0,0.85); }
+        .badge-wanted { background: #ff3b30; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div id="loginScreen" class="container">
-    <div class="login-container text-center">
-        <h2 class="mb-4"><i class="fas fa-balance-scale"></i> MDT Login</h2>
-        <div class="mb-3">
-            <input type="text" id="loginUser" class="form-control" placeholder="Benutzername">
+<div id="loginScreen" class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4 card p-4 text-center">
+            <h3>MDT LOGIN</h3>
+            <input type="text" id="loginUser" class="form-control mb-2" placeholder="Benutzername">
+            <input type="password" id="loginPass" class="form-control mb-3" placeholder="Passwort">
+            <button onclick="authLogin()" class="btn btn-primary w-100">Einloggen</button>
         </div>
-        <div class="mb-3">
-            <input type="password" id="loginPass" class="form-control" placeholder="Passwort">
-        </div>
-        <button onclick="authLogin()" class="btn btn-primary w-100">Einloggen</button>
-        <p class="text-muted mt-3 small">Zugriff nur für autorisiertes Personal (DoJ/LSPD)</p>
     </div>
 </div>
 
 <div id="appContainer" class="container-fluid hidden">
     <div class="row">
-        <div class="col-md-2 sidebar text-center">
-            <h4>MDT v2.0</h4>
-            <div id="userInfoDisplay" class="mb-4 small"></div>
-            <nav class="nav flex-column text-start">
-                <a class="nav-link active" onclick="nav('dashboard')"><i class="fas fa-home me-2"></i> Startseite</a>
-                <a class="nav-link" onclick="nav('employees')"><i class="fas fa-users-cog me-2"></i> Employees Area</a>
-                <a class="nav-link" onclick="nav('penalcode')"><i class="fas fa-gavel me-2"></i> Strafgesetzbuch</a>
-                <a class="nav-link" onclick="nav('reports')"><i class="fas fa-file-alt me-2"></i> Einsatzberichte</a>
-                <a class="nav-link" onclick="nav('citizens')"><i class="fas fa-user me-2"></i> Personenregister</a>
-                <a class="nav-link" onclick="nav('vehicles')"><i class="fas fa-car me-2"></i> Fahrzeuge</a>
-                <a class="nav-link text-danger mt-5" onclick="authLogout()"><i class="fas fa-sign-out-alt me-2"></i> Ausloggen</a>
-                <a class="nav-link" onclick="nav('court')"><i class="fas fa-balance-scale me-2"></i> Gerichtsakten</a>
+        <div class="col-md-2 sidebar">
+            <h4 class="text-center">MDT v3.0</h4>
+            <div id="userInfo" class="small text-center mb-4"></div>
+            <nav class="nav flex-column">
+                <a class="nav-link active" onclick="nav('dashboard')"><i class="fas fa-home"></i> Start</a>
+                <a class="nav-link" onclick="nav('citizens')"><i class="fas fa-user"></i> Personen</a>
+                <a class="nav-link" onclick="nav('vehicles')"><i class="fas fa-car"></i> Fahrzeuge</a>
+                <a class="nav-link" onclick="nav('court')"><i class="fas fa-gavel"></i> Gericht</a>
+                <a class="nav-link" onclick="nav('penalcode')"><i class="fas fa-book"></i> Gesetze</a>
+                <a class="nav-link" onclick="nav('employees')"><i class="fas fa-users"></i> Personal</a>
+                <a class="nav-link text-danger mt-5" onclick="authLogout()"><i class="fas fa-power-off"></i> Logout</a>
             </nav>
         </div>
 
         <div class="col-md-10 p-4">
             
             <div id="view-dashboard" class="view-section">
-                <h3><i class="fas fa-search"></i> Globale Suche</h3>
-                <hr>
+                <h3>Dashboard</h3>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6">
                         <div class="card p-3">
-                            <label>Personensuche</label>
-                            <input type="text" class="form-control" placeholder="Name..." onkeyup="globalSearch(this.value, 'person')">
+                            <label>Schnellsuche Person</label>
+                            <input type="text" class="form-control" onkeyup="globalSearch(this.value, 'person')" placeholder="Name eingeben...">
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6">
                         <div class="card p-3">
-                            <label>KFZ-Kennzeichen</label>
-                            <input type="text" class="form-control" placeholder="ABC-123..." onkeyup="globalSearch(this.value, 'vehicle')">
+                            <label>Kennzeichenabfrage</label>
+                            <input type="text" class="form-control" onkeyup="searchVehicle(this.value)" placeholder="Kennzeichen...">
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card p-3 border-danger">
-                            <label class="text-danger">Wanted List Suche</label>
-                            <input type="text" class="form-control" placeholder="Gesuchte Personen...">
+                </div>
+                <div class="card p-3 border-danger mt-4">
+                    <h5 class="text-danger">Fahndungsliste (Wanted)</h5>
+                    <div id="wantedList" class="d-flex flex-wrap"></div>
+                </div>
+            </div>
+
+            <div id="view-citizens" class="view-section hidden">
+                <div class="d-flex justify-content-between">
+                    <h3>Personenregister</h3>
+                    <button class="btn btn-success" onclick="openModal('addPersonModal')">+ Neue Person</button>
+                </div>
+                <div id="personDetail" class="card p-3 mt-3 hidden">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <img id="pDetailPhoto" src="" class="img-fluid rounded mb-2">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <h4 id="pDetailName"></h4>
+                                <div id="pWarningShield" class="ms-2"></div>
+                            </div>
+                            <div id="courtWarningBox"></div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-3"><b>Geb:</b> <span id="pDetailDob"></span></div>
+                                <div class="col-md-3"><b>Größe:</b> <span id="pDetailHeight"></span></div>
+                                <div class="col-md-3"><b>Tel:</b> <span id="pDetailPhone"></span></div>
+                                <div class="col-md-3"><b>Wohnort:</b> <span id="pDetailAddress"></span></div>
+                            </div>
+                            <div id="pDetailTags" class="mt-2"></div>
+                            <hr>
+                            <h5>Einträge / Akte</h5>
+                            <button class="btn btn-sm btn-danger mb-2" onclick="openModal('addRecordModal')">Eintrag hinzufügen</button>
+                            <div id="recordList"></div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                </div>
+            </div>
+
+            <div id="view-vehicles" class="view-section hidden">
+                <div class="d-flex justify-content-between">
+                    <h3>Fahrzeugregister</h3>
+                    <button class="btn btn-success" onclick="openModal('addVehicleModal')">+ Fahrzeug registrieren</button>
+                </div>
+                <div id="vehicleResultList" class="row mt-3"></div>
+            </div>
+
+            <div id="view-court" class="view-section hidden">
+                <div class="d-flex justify-content-between">
+                    <h3>Gerichtsmanagement</h3>
+                    <button class="btn btn-warning" onclick="openModal('addCourtModal')">Fall eröffnen</button>
+                </div>
+                <div id="courtCaseList" class="row mt-3"></div>
+            </div>
+
+            <div id="view-penalcode" class="view-section hidden">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3>Gesetzbuch</h3>
+                        <input type="text" id="lawSearch" class="form-control mb-2" onkeyup="renderLaws()" placeholder="Suchen...">
+                        <div class="card p-2" style="max-height: 70vh; overflow-y: auto;">
+                            <table class="table table-dark table-hover"><tbody id="lawTable"></tbody></table>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="card p-3">
-                            <label>Gesetzes Suche</label>
-                            <input type="text" class="form-control" placeholder="Stichwort (z.B. Mord)...">
+                            <h5>Strafrechner</h5>
+                            <div id="calcList" class="small mb-2"></div>
+                            <input type="number" id="calcDiscount" class="form-control mb-2" value="0" onchange="updateCalc()" placeholder="Rabatt %">
+                            <h4 class="text-success">Summe: $<span id="calcTotal">0</span></h4>
+                            <h5 class="text-warning">Haft: <span id="calcJail">0</span> Mon.</h5>
+                            <button class="btn btn-sm btn-outline-danger w-100" onclick="clearCalc()">Reset</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="view-employees" class="view-section hidden">
-                <h3>Personalakte & Notizen</h3>
+                <h3>Personalverwaltung</h3>
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="card p-3">
-                            <h5><i class="fas fa-sticky-note"></i> Meine privaten Notizen</h5>
-                            <textarea id="personalNotes" class="form-control mb-2" rows="10" placeholder="Notizen hier..."></textarea>
-                            <button class="btn btn-success btn-sm" onclick="saveNotes()">Speichern</button>
-                        </div>
-                    </div>
-                    <div class="col-md-6" id="hrPanel">
-                        <div class="card p-3">
-                            <h5><i class="fas fa-user-plus"></i> Personalverwaltung</h5>
-                            <div class="mb-2">
-                                <input type="text" id="newEmpUser" class="form-control mb-1" placeholder="Benutzername">
-                                <input type="password" id="newEmpPass" class="form-control mb-1" placeholder="Passwort setzen">
-                                <select id="newEmpRank" class="form-select mb-1">
-                                    <option value="LSPD Officer">LSPD Officer</option>
-                                    <option value="Detektiv">Detektiv</option>
-                                    <option value="Sergeant">Sergeant</option>
-                                    <option value="LSPD Command">LSPD Command</option>
-                                    <option value="Marshal Officer">Marshal Officer</option>
-                                    <option value="Marshal Deputy">Marshal Deputy</option>
-                                    <option value="Marshal Command">Marshal Command</option>
-                                    <option value="Attorney">Attorney</option>
-                                    <option value="District Attorney">District Attorney</option>
-                                    <option value="Judge">Judge</option>
-                                </select>
-                                <button class="btn btn-primary w-100" onclick="registerEmployee()">Mitarbeiter einstellen</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-penalcode" class="view-section hidden">
-                <h3>Strafgesetzbuch (Penal Code)</h3>
-                <div class="row">
-                    <div class="col-md-8">
-                        <input type="text" id="lawSearch" class="form-control mb-3" placeholder="Gesetz suchen..." onkeyup="renderLaws()">
-                        <div class="card p-2" style="height: 60vh; overflow-y: scroll;">
-                            <table class="table table-dark table-hover">
-                                <thead><tr><th>§</th><th>Titel (DE)</th><th>Titel (EN)</th><th>Strafe ($)</th><th>Haft (M)</th><th>+</th></tr></thead>
-                                <tbody id="lawTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
                     <div class="col-md-4">
-                        <div class="card p-3 position-fixed" style="width: 25%;">
-                            <h5>Strafrechner</h5>
-                            <ul id="selectedLawsList" class="list-group list-group-flush small mb-3 text-dark"></ul>
-                            <div class="mb-2">
-                                <label>Strafnachlass (%)</label>
-                                <input type="number" id="fineReduction" class="form-control" value="0" min="0" max="100" onchange="calculateTotal()">
-                            </div>
-                            <h4 class="text-success">Total: $<span id="totalFine">0</span></h4>
-                            <h5 class="text-warning">Haft: <span id="totalJail">0</span> Monate</h5>
-                            <button class="btn btn-danger w-100" onclick="clearCalculator()">Reset</button>
+                        <div class="card p-3">
+                            <h5>Mitarbeiter einstellen</h5>
+                            <input type="text" id="newEmpUser" class="form-control mb-1" placeholder="Username">
+                            <input type="text" id="newEmpBadge" class="form-control mb-1" placeholder="Badge [LSPD-01]">
+                            <input type="password" id="newEmpPass" class="form-control mb-1" placeholder="Passwort">
+                            <select id="newEmpRank" class="form-select mb-2">
+                                <option>LSPD Officer</option>
+                                <option>LSPD Command</option>
+                                <option>Judge</option>
+                                <option>Attorney General</option>
+                            </select>
+                            <button class="btn btn-primary w-100" onclick="registerEmployee()">Speichern</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="view-reports" class="view-section hidden">
-                <h3>Einsatzberichte</h3>
-                <div class="card p-4">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label>Titel (Auto-Generiert)</label>
-                            <input type="text" id="reportTitle" class="form-control" readonly placeholder="Wird generiert...">
-                        </div>
-                        <div class="col-md-8">
-                            <label>Beteiligte Personen</label>
-                            <input type="text" id="reportInvolved" class="form-control" placeholder="Namen eingeben...">
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <label>Bericht</label>
-                        <textarea id="reportContent" class="form-control" rows="10">
-VORLAGE EINSATZBERICHT
-----------------------
-Ort: 
-Zeit: 
-Situation: 
-
-Beweismittel:
-Maßnahmen:
-                        </textarea>
-                    </div>
-                    <button class="btn btn-primary mt-3" onclick="submitReport()">Bericht absenden</button>
-                </div>
-            </div>
-
-            <div id="view-citizens" class="view-section hidden">
-                <h3>Personenregister</h3>
-                <button class="btn btn-success mb-3" onclick="showAddPersonModal()"><i class="fas fa-plus"></i> Neue Person</button>
-                
-                <div id="personDetail" class="card p-3 hidden">
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            <img id="pDetailPhoto" src="" class="img-fluid rounded mb-2" alt="Foto">
-                            <h4 id="pDetailName">Max Mustermann</h4>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col-md-4"><strong>Geb:</strong> <span id="pDetailDob"></span></div>
-                                <div class="col-md-4"><strong>Größe:</strong> <span id="pDetailHeight"></span></div>
-                                <div class="col-md-4"><strong>Tel:</strong> <span id="pDetailPhone"></span></div>
-                            </div>
-                            <hr>
-                            <div id="pDetailTags" class="mb-3"></div>
-                            
-                            <ul class="nav nav-tabs" id="pTabs">
-                                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-akte">Akte</a></li>
-                                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-invest">Ermittlungen</a></li>
-                                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-ia">Internal Affairs</a></li>
-                            </ul>
-                            
-                            <div class="tab-content p-3 border border-top-0">
-                                <div class="tab-pane fade show active" id="tab-akte">
-                                    <button class="btn btn-sm btn-outline-danger mb-2" onclick="addRecordEntry()">Eintrag hinzufügen</button>
-                                    <div id="recordList"></div>
-                                </div>
-                                <div class="tab-pane fade" id="tab-invest">
-                                    <div id="investigationArea">
-                                        </div>
-                                </div>
-                                <div class="tab-pane fade" id="tab-ia">
-                                    <div id="iaArea">
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-             <div id="view-vehicles" class="view-section hidden">
-                <h3>Fahrzeugregister</h3>
-                <button class="btn btn-success mb-3" onclick="showAddVehicleModal()"><i class="fas fa-plus"></i> Fahrzeug registrieren</button>
-                <div id="vehicleList" class="row">
-                    </div>
-             </div>
-
         </div>
     </div>
 </div>
 
-<div class="modal" tabindex="-1" id="addPersonModal">
-  <div class="modal-dialog">
-    <div class="modal-content bg-dark text-white">
-      <div class="modal-header"><h5 class="modal-title">Person anlegen</h5></div>
-      <div class="modal-body">
-        <input type="text" id="newPName" class="form-control mb-2" placeholder="Vor- und Nachname (Pflicht)">
-        <input type="date" id="newPDob" class="form-control mb-2" placeholder="Geburtsdatum (Pflicht)">
-        <input type="text" id="newPHeight" class="form-control mb-2" placeholder="Größe (cm) (Pflicht)">
-        <input type="text" id="newPPhoto" class="form-control mb-2" placeholder="Foto URL">
-        <input type="text" id="newPPhone" class="form-control mb-2" placeholder="Telefonnummer">
-        <input type="text" id="newPAddress" class="form-control mb-2" placeholder="Wohnhaft">
-        <label>Tags:</label>
-        <select multiple class="form-select" id="newPTags">
-            <option value="Wanted">Wanted</option>
-            <option value="License A">Driver License A</option>
-            <option value="License B">Driver License B</option>
-            <option value="Immunity">Immunität</option>
-        </select>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('addPersonModal')">Abbrechen</button>
-        <button type="button" class="btn btn-primary" onclick="saveNewPerson()">Speichern</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div id="view-court" class="view-section hidden">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3><i class="fas fa-gavel"></i> Gerichtsmanagement</h3>
-        <button class="btn btn-warning" onclick="showCreateCaseModal()"><i class="fas fa-folder-plus"></i> Fall eröffnen</button>
-    </div>
-    <div id="courtCaseList" class="row">
-        </div>
-</div>
+<div class="modal" id="addPersonModal"><div class="modal-dialog"><div class="modal-content bg-dark p-3">
+    <h5>Person hinzufügen</h5>
+    <input type="text" id="nPName" class="form-control mb-2" placeholder="Vor- Nachname">
+    <input type="date" id="nPDob" class="form-control mb-2">
+    <input type="text" id="nPHeight" class="form-control mb-2" placeholder="Größe">
+    <input type="text" id="nPPhoto" class="form-control mb-2" placeholder="Foto URL">
+    <select id="nPTags" class="form-select mb-3" multiple><option value="Wanted">Wanted</option><option value="License A">Führerschein</option></select>
+    <button class="btn btn-primary" onclick="savePerson()">Speichern</button>
+    <button class="btn btn-secondary" onclick="closeModal('addPersonModal')">Abbrechen</button>
+</div></div></div>
 
-<div class="modal" tabindex="-1" id="addCourtModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content bg-dark text-white">
-      <div class="modal-header"><h5 class="modal-title">Neues Gerichtsverfahren einleiten</h5></div>
-      <div class="modal-body">
-        <div class="row">
-            <div class="col-md-6">
-                <label>Angeklagte Person (Name)</label>
-                <input type="text" id="courtDef" class="form-control mb-2" placeholder="Max Mustermann">
-            </div>
-            <div class="col-md-6">
-                <label>Aktenzeichen / Fall-Name</label>
-                <input type="text" id="courtTitle" class="form-control mb-2" placeholder="Staat vs. Mustermann">
-            </div>
-        </div>
-        <label>Anklagepunkte (Details)</label>
-        <textarea id="courtCharges" class="form-control mb-2" rows="3" placeholder="Welche Paragraphen wurden verletzt?"></textarea>
-        <label>Beweismittel (Links/Bericht-IDs)</label>
-        <textarea id="courtEvidence" class="form-control mb-2" rows="2"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('addCourtModal')">Abbrechen</button>
-        <button type="button" class="btn btn-warning" onclick="saveCourtCase()">Fall einreichen</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="modal" id="addVehicleModal"><div class="modal-dialog"><div class="modal-content bg-dark p-3">
+    <h5>Fahrzeug registrieren</h5>
+    <input type="text" id="vPlate" class="form-control mb-2" placeholder="Kennzeichen">
+    <input type="text" id="vModel" class="form-control mb-2" placeholder="Modell">
+    <input type="text" id="vOwner" class="form-control mb-2" placeholder="Besitzer Name">
+    <div class="form-check mb-2"><input type="checkbox" id="vStolen" class="form-check-input"> <label class="text-danger">Als gestohlen melden</label></div>
+    <button class="btn btn-primary" onclick="saveVehicle()">Registrieren</button>
+    <button class="btn btn-secondary" onclick="closeModal('addVehicleModal')">Abbrechen</button>
+</div></div></div>
+
+<div class="modal" id="addRecordModal"><div class="modal-dialog"><div class="modal-content bg-dark p-3">
+    <h5>Akteneintrag</h5>
+    <input type="text" id="rTitle" class="form-control mb-2" placeholder="Titel">
+    <textarea id="rText" class="form-control mb-2" placeholder="Details"></textarea>
+    <div class="row mb-2"><div class="col-6"><input type="number" id="rFine" class="form-control" placeholder="Strafe $"></div><div class="col-6"><input type="number" id="rJail" class="form-control" placeholder="Monate"></div></div>
+    <button class="btn btn-danger" onclick="saveRecord()">Eintragen</button>
+    <button class="btn btn-secondary" onclick="closeModal('addRecordModal')">Abbrechen</button>
+</div></div></div>
+
+<div class="modal" id="addCourtModal"><div class="modal-dialog"><div class="modal-content bg-dark p-3">
+    <h5>Gerichtsfall eröffnen</h5>
+    <input type="text" id="cTitle" class="form-control mb-2" placeholder="Staat vs ...">
+    <input type="text" id="cDef" class="form-control mb-2" placeholder="Angeklagter">
+    <textarea id="cCharges" class="form-control mb-3" placeholder="Anklagepunkte"></textarea>
+    <button class="btn btn-warning" onclick="saveCourt()">Einreichen</button>
+    <button class="btn btn-secondary" onclick="closeModal('addCourtModal')">Abbrechen</button>
+</div></div></div>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // --- 1. CONFIGURATION ---
-  const firebaseConfig = {
+    const firebaseConfig = {
     apiKey: "AIzaSyCGzYuktvsFcmU5pnBtWzso_eFbTcG6oPQ",
-    authDomain: "mdt-by-heimo.firebaseapp.com",
-    projectId: "mdt-by-heimo",
-    storageBucket: "mdt-by-heimo.firebasestorage.app",
-    messagingSenderId: "539623345312",
-    appId: "1:539623345312:web:9b142cfd0e3402972f4dc5"
+  authDomain: "mdt-by-heimo.firebaseapp.com",
+  projectId: "mdt-by-heimo",
+  storageBucket: "mdt-by-heimo.firebasestorage.app",
+  messagingSenderId: "539623345312",
+  appId: "1:539623345312:web:9b142cfd0e3402972f4dc5"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // --- 2. PENAL CODE DATA ---
-    const penalCode = [
-        { id: "§1", de: "Geschwindigkeitsüberschreitung (16-30 km/h)", en: "Speeding (10-20 mph over)", fine: 500, jail: 0 },
-        { id: "§2", de: "Fahren ohne Fahrerlaubnis", en: "Driving without License", fine: 1500, jail: 0 },
-        { id: "§3", de: "Körperverletzung", en: "Assault", fine: 2500, jail: 15 },
-        { id: "§4", de: "Mord", en: "Murder", fine: 50000, jail: 100 },
-        { id: "§5", de: "Drogenbesitz (Klasse A)", en: "Drug Possession A", fine: 5000, jail: 20 },
-    ];
-    let calculatorCart = [];
-
-    // --- 3. ROLE MANAGEMENT ---
     let currentUser = null;
-    
-    const ROLES = {
-        "LSPD Officer": { lvl: 1, type: "LSPD", canInvestigate: false, canHire: false },
-        "Marshal Officer": { lvl: 1, type: "USMS", canInvestigate: false, canHire: false },
-        "Detektiv": { lvl: 2, type: "LSPD", canInvestigate: true, canHire: false },
-        "Sergeant": { lvl: 2, type: "LSPD", canInvestigate: true, canHire: false },
-        "Marshal Deputy": { lvl: 2, type: "USMS", canInvestigate: true, canHire: false },
-        "LSPD Command": { lvl: 3, type: "LSPD", canInvestigate: true, canHire: true, manageRanks: ["LSPD Officer", "Detektiv", "Sergeant"] },
-        "Marshal Command": { lvl: 3, type: "USMS", canInvestigate: true, canHire: true, manageRanks: ["Marshal Officer", "Marshal Deputy"] },
-        "Attorney": { lvl: 4, type: "DOJ", canInvestigate: true, readOnly: true }, // Read only investigations
-        "District Attorney": { lvl: 5, type: "DOJ", canHire: true, manageRanks: ["Attorney"] },
-        "Judge": { lvl: 6, type: "DOJ", canInvestigate: true, canDeleteRecords: true },
-        "Chief Justice": { lvl: 7, type: "DOJ", canInvestigate: true, canDeleteAll: true, manageRanks: ["Judge"] },
-        "Attorney General": { lvl: 99, type: "ADMIN", canInvestigate: true, canHire: true, canIA: true }
-    };
+    let currentPersonId = null;
+    let calcCart = [];
 
-    // --- 4. AUTHENTICATION ---
+    const penalCode = [
+        {id: "§1", de: "Speeding", fine: 500, jail: 0},
+        {id: "§2", de: "Assault", fine: 2500, jail: 15},
+        {id: "§3", de: "Murder", fine: 50000, jail: 100}
+    ];
+
     function authLogin() {
-        const user = document.getElementById('loginUser').value;
-        const pass = document.getElementById('loginPass').value;
-        const email = user + "@mdt.local"; // Fake Email mapping
-
-        auth.signInWithEmailAndPassword(email, pass)
-            .then((userCredential) => {
-                loadUserData(userCredential.user.uid);
-            })
-            .catch((error) => {
-                alert("Login fehlgeschlagen: " + error.message);
-            });
-    }
-
-    function loadUserData(uid) {
-        db.collection("employees").doc(uid).get().then((doc) => {
-            if (doc.exists) {
+        const u = document.getElementById('loginUser').value;
+        const p = document.getElementById('loginPass').value;
+        auth.signInWithEmailAndPassword(u + "@mdt.local", p).then(c => {
+            db.collection("employees").doc(c.user.uid).get().then(doc => {
                 currentUser = doc.data();
-                currentUser.uid = uid;
+                currentUser.uid = c.user.uid;
                 initApp();
-            } else {
-                alert("Benutzerdaten nicht gefunden. Wende dich an die IT/Command.");
-            }
-        });
+            });
+        }).catch(e => alert(e.message));
     }
 
-    function authLogout() {
-        auth.signOut().then(() => {
-            location.reload();
-        });
-    }
-
-    // --- 5. APP NAVIGATION & UI LOGIC ---
     function initApp() {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('appContainer').classList.remove('hidden');
-        document.getElementById('userInfoDisplay').innerHTML = `
-            <strong>${currentUser.username}</strong><br>
-            <span class="badge bg-secondary">${currentUser.rank}</span>
-        `;
-        
-        // Hide/Show HR Panel based on rank
-        const role = ROLES[currentUser.rank];
-        if (!role || (!role.canHire && role.lvl < 99)) {
-            document.getElementById('hrPanel').classList.add('hidden');
-        }
-
+        document.getElementById('userInfo').innerHTML = `<b>${currentUser.username}</b> [${currentUser.badge || 'N/A'}]<br>${currentUser.rank}`;
+        loadWantedList();
         nav('dashboard');
     }
 
-    function nav(viewId) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.remove('hidden');
-        
-        if(viewId === 'penalcode') renderLaws();
+    function nav(id) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-' + id).classList.remove('hidden');
+        if(id === 'penalcode') renderLaws();
+        if(id === 'court') loadCourtCases();
     }
 
-    // --- 6. PENAL CODE CALCULATOR ---
-    function renderLaws() {
-        const search = document.getElementById('lawSearch').value.toLowerCase();
-        const tbody = document.getElementById('lawTableBody');
-        tbody.innerHTML = '';
-        
-        penalCode.forEach(law => {
-            if (law.de.toLowerCase().includes(search) || law.id.toLowerCase().includes(search)) {
-                let tr = document.createElement('tr');
-                tr.className = 'law-row';
-                tr.innerHTML = `
-                    <td>${law.id}</td>
-                    <td>${law.de}</td>
-                    <td>${law.en}</td>
-                    <td>$${law.fine}</td>
-                    <td>${law.jail} M</td>
-                    <td><button class="btn btn-sm btn-outline-info" onclick="addToCalc('${law.id}')">+</button></td>
-                `;
-                tbody.appendChild(tr);
-            }
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // --- PERSONEN LOGIK ---
+    function globalSearch(q, type) {
+        if(q.length < 3) return;
+        db.collection("citizens").where("name", ">=", q).where("name", "<=", q + "\uf8ff").get().then(snap => {
+            if(!snap.empty) showPerson(snap.docs[0].id, snap.docs[0].data());
         });
     }
 
-    function addToCalc(lawId) {
-        const law = penalCode.find(l => l.id === lawId);
-        calculatorCart.push(law);
-        updateCalcUI();
-    }
-
-    function updateCalcUI() {
-        const list = document.getElementById('selectedLawsList');
-        list.innerHTML = '';
-        let totalFine = 0;
-        let totalJail = 0;
-
-        calculatorCart.forEach((law, index) => {
-            totalFine += law.fine;
-            totalJail += law.jail;
-            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                ${law.de}
-                <i class="fas fa-times text-danger" style="cursor:pointer" onclick="removeFromCalc(${index})"></i>
-            </li>`;
+    function showPerson(id, data) {
+        currentPersonId = id;
+        nav('citizens');
+        document.getElementById('personDetail').classList.remove('hidden');
+        document.getElementById('pDetailName').innerText = data.name;
+        document.getElementById('pDetailDob').innerText = data.dob;
+        document.getElementById('pDetailPhoto').src = data.photo || "https://via.placeholder.com/150";
+        
+        // Check Gericht
+        db.collection("court_cases").where("defendant", "==", data.name).where("status", "!=", "GESCHLOSSEN").get().then(snap => {
+            const warn = document.getElementById('courtWarningBox');
+            const shield = document.getElementById('pWarningShield');
+            if(!snap.empty) {
+                warn.innerHTML = '<div class="alert alert-danger p-1 mt-1 small">Laufendes Verfahren!</div>';
+                shield.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i>';
+            } else { warn.innerHTML = ''; shield.innerHTML = ''; }
         });
-
-        const reduction = document.getElementById('fineReduction').value;
-        if(reduction > 0) {
-            totalFine = totalFine * ((100 - reduction) / 100);
-        }
-
-        document.getElementById('totalFine').innerText = Math.round(totalFine);
-        document.getElementById('totalJail').innerText = totalJail;
+        loadRecords(id);
     }
 
-    function removeFromCalc(index) {
-        calculatorCart.splice(index, 1);
-        updateCalcUI();
-    }
-    
-    function calculateTotal() { updateCalcUI(); }
-    function clearCalculator() { calculatorCart = []; document.getElementById('fineReduction').value=0; updateCalcUI(); }
-
-    // --- 7. REPORTS ---
-    function submitReport() {
-        // Naming Logic
-        let prefix = "UNKNOWN";
-        const role = ROLES[currentUser.rank];
-        
-        if (role.type === "LSPD" || currentUser.rank.includes("LSPD") || currentUser.rank.includes("Detektiv")) prefix = "LSPD-EINSATZ";
-        if (role.type === "USMS" || currentUser.rank.includes("Marshal")) prefix = "LSMS-EINSATZ";
-        
-        // Simulating getting next ID (In Real Firebase use Transactions)
-        const timestamp = Date.now().toString().substr(-6); 
-        const title = `${prefix}-${timestamp}`;
-        
-        const report = {
-            title: title,
-            author: currentUser.username,
-            rank: currentUser.rank,
-            involved: document.getElementById('reportInvolved').value,
-            content: document.getElementById('reportContent').value,
-            date: new Date().toISOString()
+    function savePerson() {
+        const p = {
+            name: document.getElementById('nPName').value,
+            dob: document.getElementById('nPDob').value,
+            height: document.getElementById('nPHeight').value,
+            photo: document.getElementById('nPPhoto').value,
+            tags: Array.from(document.getElementById('nPTags').selectedOptions).map(o => o.value)
         };
-
-        db.collection("reports").add(report).then(() => {
-            alert(`Bericht ${title} gespeichert!`);
-            document.getElementById('reportInvolved').value = '';
-        });
-    }
-
-    // --- 8. PERSONS & PERMISSIONS ---
-    // Modal Helpers
-    function showAddPersonModal() { 
-        document.getElementById('addPersonModal').style.display = 'block'; 
-    }
-    function closeModal(id) { 
-        document.getElementById(id).style.display = 'none'; 
-    }
-
-    function saveNewPerson() {
-        const name = document.getElementById('newPName').value;
-        const dob = document.getElementById('newPDob').value;
-        const height = document.getElementById('newPHeight').value;
-        
-        if(!name || !dob || !height) return alert("Pflichtfelder fehlen!");
-
-        // Tags Collection
-        let tags = Array.from(document.getElementById('newPTags').selectedOptions).map(o => o.value);
-
-        const person = {
-            name, dob, height,
-            photo: document.getElementById('newPPhoto').value,
-            phone: document.getElementById('newPPhone').value,
-            address: document.getElementById('newPAddress').value,
-            tags: tags,
-            registeredBy: currentUser.username
-        };
-
-        db.collection("citizens").add(person).then(() => {
-            alert("Person angelegt.");
-            closeModal('addPersonModal');
-        });
-    }
-    
-    // Permission Checks for Investigations/IA
-    function loadPersonDetails(personId) {
-        // ... (Logic to fetch data from Firestore and fill #personDetail)
-        // Check Role for Tabs
-        const role = ROLES[currentUser.rank];
-        const investTab = document.querySelector('a[href="#tab-invest"]');
-        const iaTab = document.querySelector('a[href="#tab-ia"]');
-        
-        // Hide Investigations for basic officers
-        if (!role.canInvestigate) {
-            investTab.parentElement.classList.add('hidden');
-        } else {
-            investTab.parentElement.classList.remove('hidden');
-        }
-
-        // Hide IA for everyone except AG
-        if (!role.canIA) {
-            iaTab.parentElement.classList.add('hidden');
-        } else {
-            iaTab.parentElement.classList.remove('hidden');
-        }
-    }
-
-    // --- 9. EMPLOYEES (SIMULATED REGISTRATION) ---
-    function registerEmployee() {
-        // NOTE: In a real app, you need a Cloud Function to create the Auth User.
-        // Here we just save the metadata. The user would need to be created in Auth console manually or via Admin SDK.
-        const username = document.getElementById('newEmpUser').value;
-        const rank = document.getElementById('newEmpRank').value;
-        
-        // Check permissions
-        const myRole = ROLES[currentUser.rank];
-        if(!myRole.canHire && myRole.lvl < 99) return alert("Keine Rechte!");
-        
-        // Check if I can manage this rank
-        if(myRole.manageRanks && !myRole.manageRanks.includes(rank) && myRole.lvl < 99) {
-            return alert(`Du darfst keinen ${rank} einstellen.`);
-        }
-
-        // Auto-create citizen record for new employee logic
-        // 1. Check if citizen exists... if not -> create
-        // This is complex for a snippet, but essentially:
-        // db.collection("citizens").where("name", "==", username).get()...
-        
-        alert(`Mitarbeiter ${username} als ${rank} registriert (Datenbank). \n\nHINWEIS: Authentication Account muss separat erstellt werden.`);
-    }
-// --- ERGÄNZUNG: VARIABLEN ---
-    let currentPersonId = null; // Speichert, welche Person gerade angesehen wird
-
-    // --- FUNKTIONEN FÜR FAHRZEUGE ---
-    
-    function showAddVehicleModal() {
-        document.getElementById('addVehicleModal').style.display = 'block';
-    }
-
-    function saveNewVehicle() {
-        const ownerName = document.getElementById('vehOwner').value;
-        const plate = document.getElementById('vehPlate').value;
-        const model = document.getElementById('vehModel').value;
-        const color = document.getElementById('vehColor').value;
-        const hasMods = document.getElementById('vehMods').checked;
-
-        if(!ownerName || !plate || !model) return alert("Bitte Besitzer, Kennzeichen und Modell ausfüllen!");
-
-        // 1. Besitzer im Register suchen (Abgleich)
-        db.collection("citizens").where("name", "==", ownerName).limit(1).get()
-        .then((snapshot) => {
-            if (snapshot.empty) {
-                alert("FEHLER: Dieser Besitzer existiert nicht im Personenregister! Bitte erst Person anlegen.");
-                return;
-            }
-
-            const ownerDoc = snapshot.docs[0];
-            const ownerId = ownerDoc.id;
-
-            // 2. Fahrzeug speichern
-            const vehicleData = {
-                plate: plate,
-                model: model,
-                color: color,
-                ownerName: ownerName,
-                ownerId: ownerId, // Verknüpfung zur ID
-                hasMods: hasMods,
-                registeredBy: currentUser.username,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection("vehicles").add(vehicleData).then(() => {
-                alert("Fahrzeug erfolgreich registriert!");
-                closeModal('addVehicleModal');
-                
-                // Falls wir gerade im Fahrzeug-Tab sind, Liste neu laden (optional)
-                // loadVehicleList(); 
-                
-                // Eintrag in die Akte des Besitzers schreiben (optional, wie gewünscht)
-                db.collection("citizens").doc(ownerId).collection("history").add({
-                    text: `Fahrzeug registriert: ${model} (${plate})`,
-                    date: new Date().toISOString(),
-                    type: "VEHICLE"
-                });
-            });
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-            alert("Fehler beim Speichern: " + error.message);
-        });
-    }
-
-    // --- FUNKTIONEN FÜR AKTEN (RECORDS) ---
-
-    // Diese Funktion wird aufgerufen, wenn man auf "Eintrag hinzufügen" in einer Personenkakte klickt
-    function addRecordEntry() {
-        if(!currentPersonId) return alert("Keine Person ausgewählt!");
-        document.getElementById('addRecordModal').style.display = 'block';
+        db.collection("citizens").add(p).then(() => { alert("Person angelegt"); closeModal('addPersonModal'); loadWantedList(); });
     }
 
     function saveRecord() {
-        if(!currentPersonId) return;
-
-        const title = document.getElementById('recTitle').value;
-        const details = document.getElementById('recDetails').value;
-        const fine = document.getElementById('recFine').value || 0;
-        const jail = document.getElementById('recJail').value || 0;
-
-        const recordData = {
-            title: title,
-            details: details,
-            fine: parseInt(fine),
-            jail: parseInt(jail),
-            officer: currentUser.username,
-            date: new Date().toISOString(),
-            type: "CRIME" // oder "NOTE"
+        const r = {
+            title: document.getElementById('rTitle').value,
+            details: document.getElementById('rText').value,
+            fine: parseInt(document.getElementById('rFine').value || 0),
+            jail: parseInt(document.getElementById('rJail').value || 0),
+            officer: `[${currentUser.badge}] ${currentUser.username}`,
+            date: new Date().toISOString()
         };
-
-        // Speichern in einer Unter-Sammlung 'records' der Person
-        db.collection("citizens").doc(currentPersonId).collection("records").add(recordData)
-        .then(() => {
-            alert("Akte aktualisiert!");
-            closeModal('addRecordModal');
-            // Ansicht aktualisieren
-            loadPersonDetailsLogic(currentPersonId); 
+        db.collection("citizens").doc(currentPersonId).collection("records").add(r).then(() => {
+            closeModal('addRecordModal'); loadRecords(currentPersonId);
         });
     }
 
-    // --- HILFSFUNKTION: PERSON DETAILS LADEN (Muss die alte Logik ersetzen/erweitern) ---
-    // Ersetze die Stelle im alten Code wo "loadPersonDetails" steht hiermit, 
-    // oder füge dies hinzu, damit die Akten auch angezeigt werden.
-
-    function globalSearch(query, type) {
-        if(query.length < 3) return; // Erst ab 3 Buchstaben suchen
-        
-        if(type === 'person') {
-            // Einfache Suche (Case Sensitive in Firebase ist schwierig, daher hier vereinfacht)
-            // Ein echter Production-Code bräuchte ein extra Suchfeld "searchName" in Kleinbuchstaben.
-            db.collection("citizens").where("name", ">=", query).where("name", "<=", query + "\uf8ff").get()
-            .then(snap => {
-                // Hier könnte man eine Suchergebnis-Liste anzeigen.
-                // Für dieses Beispiel öffnen wir direkt den ersten Treffer:
-                if(!snap.empty) {
-                    const doc = snap.docs[0];
-                    openPersonDetail(doc.id, doc.data());
-                }
-            });
-        }
-    }
-
-    function openPersonDetail(id, data) {
-        currentPersonId = id; // WICHTIG: ID global setzen
-        
-        document.getElementById('view-dashboard').classList.add('hidden');
-        document.getElementById('view-citizens').classList.remove('hidden');
-        document.getElementById('personDetail').classList.remove('hidden');
-
-        // UI füllen
-        document.getElementById('pDetailName').innerText = data.name;
-        document.getElementById('pDetailDob').innerText = data.dob;
-        document.getElementById('pDetailHeight').innerText = data.height;
-        document.getElementById('pDetailPhone').innerText = data.phone;
-        if(data.photo) document.getElementById('pDetailPhoto').src = data.photo;
-
-        // Tags anzeigen
-        const tagContainer = document.getElementById('pDetailTags');
-        tagContainer.innerHTML = '';
-        if(data.tags) {
-            data.tags.forEach(tag => {
-                let badgeClass = 'bg-secondary';
-                if(tag === 'Wanted') badgeClass = 'bg-danger';
-                if(tag.includes('License')) badgeClass = 'bg-success';
-                tagContainer.innerHTML += `<span class="badge ${badgeClass} me-1">${tag}</span>`;
-            });
-        }
-
-        loadPersonRecords(id);
-    }
-
-    function loadPersonRecords(id) {
-        const list = document.getElementById('recordList');
-        list.innerHTML = '<div class="spinner-border text-light" role="status"></div>';
-        
-        db.collection("citizens").doc(id).collection("records").orderBy("date", "desc").get()
-        .then(snap => {
+    function loadRecords(id) {
+        db.collection("citizens").doc(id).collection("records").orderBy("date", "desc").get().then(snap => {
+            const list = document.getElementById('recordList');
             list.innerHTML = '';
-            if(snap.empty) {
-                list.innerHTML = '<p class="text-muted">Keine Einträge vorhanden.</p>';
-                return;
-            }
-            
             snap.forEach(doc => {
                 const r = doc.data();
-                const dateStr = new Date(r.date).toLocaleString();
-                list.innerHTML += `
-                    <div class="card p-2 mb-2 border-start border-danger border-4" style="background: #2c2c2c;">
-                        <div class="d-flex justify-content-between">
-                            <strong>${r.title}</strong>
-                            <small class="text-muted">${dateStr}</small>
-                        </div>
-                        <p class="mb-1 small">${r.details}</p>
-                        <div class="small">
-                            <span class="text-danger">Strafe: $${r.fine}</span> | 
-                            <span class="text-warning">Haft: ${r.jail} Mon.</span> |
-                            <span class="text-info">Officer: ${r.officer}</span>
-                        </div>
-                    </div>
-                `;
+                list.innerHTML += `<div class="card p-2 mb-1 bg-dark"><b>${r.title}</b><p class="small mb-0">${r.details}</p><small class="text-danger">$${r.fine} | ${r.jail}M | ${r.officer}</small></div>`;
             });
         });
     }
-// --- COURT MANAGEMENT LOGIC ---
 
-function showCreateCaseModal() {
-    document.getElementById('addCourtModal').style.display = 'block';
-}
-
-function saveCourtCase() {
-    const title = document.getElementById('courtTitle').value;
-    const defendant = document.getElementById('courtDef').value;
-    const charges = document.getElementById('courtCharges').value;
-    const evidence = document.getElementById('courtEvidence').value;
-
-    if(!title || !defendant) return alert("Titel und Angeklagter fehlen!");
-
-    const caseData = {
-        title: title,
-        defendant: defendant,
-        charges: charges,
-        evidence: evidence,
-        prosecutor: currentUser.username,
-        judge: "Noch nicht zugewiesen",
-        status: "OFFEN", // OFFEN, TERMINIERT, GESCHLOSSEN
-        verdict: "",
-        courtDate: "",
-        createdAt: new Date().toISOString()
-    };
-
-    db.collection("court_cases").add(caseData).then(() => {
-        alert("Fall wurde beim DoJ eingereicht!");
-        closeModal('addCourtModal');
-        loadCourtCases();
-    });
-}
-
-function loadCourtCases() {
-    const container = document.getElementById('courtCaseList');
-    container.innerHTML = 'Lade Fälle...';
-
-    db.collection("court_cases").orderBy("createdAt", "desc").get().then(snap => {
-        container.innerHTML = '';
-        snap.forEach(doc => {
-            const c = doc.data();
-            const id = doc.id;
-            
-            // Status-Farben
-            let statusBadge = 'bg-info';
-            if(c.status === 'GESCHLOSSEN') statusBadge = 'bg-success';
-            if(c.status === 'TERMINIERT') statusBadge = 'bg-warning text-dark';
-
-            container.innerHTML += `
-                <div class="col-md-6 mb-3">
-                    <div class="card p-3 border-start border-warning border-4">
-                        <div class="d-flex justify-content-between">
-                            <h5>${c.title}</h5>
-                            <span class="badge ${statusBadge}">${c.status}</span>
-                        </div>
-                        <p class="small mb-1"><b>Angeklagter:</b> ${c.defendant}</p>
-                        <p class="small mb-1 text-muted"><b>Anklage:</b> ${c.charges.substring(0, 50)}...</p>
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small>Richter: ${c.judge}</small>
-                            <button class="btn btn-sm btn-outline-warning" onclick="viewCaseDetail('${id}')">Details</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+    // --- FAHRZEUG LOGIK ---
+    function searchVehicle(plate) {
+        if(plate.length < 2) return;
+        db.collection("vehicles").where("plate", "==", plate.toUpperCase()).get().then(snap => {
+            const res = document.getElementById('vehicleResultList');
+            res.innerHTML = '';
+            snap.forEach(doc => {
+                const v = doc.data();
+                const cls = v.stolen ? 'border-danger' : 'border-success';
+                res.innerHTML += `<div class="col-md-4"><div class="card p-3 border-start border-4 ${cls}">
+                    ${v.stolen ? '<b class="text-danger">GESTOHLEN</b>' : ''}
+                    <h5>${v.plate}</h5><p class="mb-0">${v.model}<br>Besitzer: ${v.ownerName}</p>
+                </div></div>`;
+            });
         });
-    });
-}
+    }
 
-// Navigations-Update: Wenn 'court' geklickt wird, lade die Liste
-const originalNav = nav;
-nav = function(id) {
-    originalNav(id);
-    if(id === 'court') loadCourtCases();
-};
+    function saveVehicle() {
+        const v = {
+            plate: document.getElementById('vPlate').value.toUpperCase(),
+            model: document.getElementById('vModel').value,
+            ownerName: document.getElementById('vOwner').value,
+            stolen: document.getElementById('vStolen').checked
+        };
+        db.collection("vehicles").add(v).then(() => { alert("Registriert"); closeModal('addVehicleModal'); });
+    }
+
+    // --- GERICHT & PENAL ---
+    function saveCourt() {
+        const c = {
+            title: document.getElementById('cTitle').value,
+            defendant: document.getElementById('cDef').value,
+            charges: document.getElementById('cCharges').value,
+            status: "OFFEN",
+            judge: "TBD",
+            createdAt: new Date().toISOString()
+        };
+        db.collection("court_cases").add(c).then(() => { closeModal('addCourtModal'); loadCourtCases(); });
+    }
+
+    function loadCourtCases() {
+        db.collection("court_cases").orderBy("createdAt", "desc").get().then(snap => {
+            const list = document.getElementById('courtCaseList');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const c = doc.data();
+                list.innerHTML += `<div class="col-md-6"><div class="card p-3 border-start border-warning border-4">
+                    <h6>${c.title}</h6><p class="small">Def: ${c.defendant}<br>Status: ${c.status}</p>
+                </div></div>`;
+            });
+        });
+    }
+
+    function renderLaws() {
+        const s = document.getElementById('lawSearch').value.toLowerCase();
+        document.getElementById('lawTable').innerHTML = penalCode.filter(l => l.de.toLowerCase().includes(s)).map(l => 
+            `<tr onclick="addToCalc('${l.id}')"><td>${l.id}</td><td>${l.de}</td><td>$${l.fine}</td><td>${l.jail}M</td></tr>`
+        ).join('');
+    }
+
+    function addToCalc(id) { calcCart.push(penalCode.find(l => l.id === id)); updateCalc(); }
+    function updateCalc() {
+        let f = calcCart.reduce((a,b) => a+b.fine, 0);
+        let j = calcCart.reduce((a,b) => a+b.jail, 0);
+        let d = document.getElementById('calcDiscount').value;
+        document.getElementById('calcTotal').innerText = f * (1 - d/100);
+        document.getElementById('calcJail').innerText = j;
+        document.getElementById('calcList').innerHTML = calcCart.map(l => l.de).join(', ');
+    }
+    function clearCalc() { calcCart = []; updateCalc(); }
+
+    function loadWantedList() {
+        db.collection("citizens").where("tags", "array-contains", "Wanted").get().then(snap => {
+            const list = document.getElementById('wantedList');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                list.innerHTML += `<span class="badge badge-wanted m-1 p-2" onclick="showPerson('${doc.id}', ${JSON.stringify(doc.data()).replace(/"/g, '&quot;')})">${doc.data().name}</span>`;
+            });
+        });
+    }
+
+    function registerEmployee() {
+        const u = document.getElementById('newEmpUser').value;
+        const b = document.getElementById('newEmpBadge').value;
+        const r = document.getElementById('newEmpRank').value;
+        alert("Daten für " + u + " [ " + b + " ] in DB vorbereitet. Auth-User muss manuell erstellt werden.");
+    }
+    
+    function authLogout() { auth.signOut().then(() => location.reload()); }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>   
+</body>
 </html>
