@@ -57,6 +57,7 @@
                 <a class="nav-link" onclick="nav('citizens')"><i class="fas fa-user me-2"></i> Personenregister</a>
                 <a class="nav-link" onclick="nav('vehicles')"><i class="fas fa-car me-2"></i> Fahrzeuge</a>
                 <a class="nav-link text-danger mt-5" onclick="authLogout()"><i class="fas fa-sign-out-alt me-2"></i> Ausloggen</a>
+                <a class="nav-link" onclick="nav('court')"><i class="fas fa-balance-scale me-2"></i> Gerichtsakten</a>
             </nav>
         </div>
 
@@ -267,7 +268,42 @@ Maßnahmen:
     </div>
   </div>
 </div>
+<div id="view-court" class="view-section hidden">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="fas fa-gavel"></i> Gerichtsmanagement</h3>
+        <button class="btn btn-warning" onclick="showCreateCaseModal()"><i class="fas fa-folder-plus"></i> Fall eröffnen</button>
+    </div>
+    <div id="courtCaseList" class="row">
+        </div>
+</div>
 
+<div class="modal" tabindex="-1" id="addCourtModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header"><h5 class="modal-title">Neues Gerichtsverfahren einleiten</h5></div>
+      <div class="modal-body">
+        <div class="row">
+            <div class="col-md-6">
+                <label>Angeklagte Person (Name)</label>
+                <input type="text" id="courtDef" class="form-control mb-2" placeholder="Max Mustermann">
+            </div>
+            <div class="col-md-6">
+                <label>Aktenzeichen / Fall-Name</label>
+                <input type="text" id="courtTitle" class="form-control mb-2" placeholder="Staat vs. Mustermann">
+            </div>
+        </div>
+        <label>Anklagepunkte (Details)</label>
+        <textarea id="courtCharges" class="form-control mb-2" rows="3" placeholder="Welche Paragraphen wurden verletzt?"></textarea>
+        <label>Beweismittel (Links/Bericht-IDs)</label>
+        <textarea id="courtEvidence" class="form-control mb-2" rows="2"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addCourtModal')">Abbrechen</button>
+        <button type="button" class="btn btn-warning" onclick="saveCourtCase()">Fall einreichen</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -724,6 +760,82 @@ Maßnahmen:
             });
         });
     }
+// --- COURT MANAGEMENT LOGIC ---
+
+function showCreateCaseModal() {
+    document.getElementById('addCourtModal').style.display = 'block';
+}
+
+function saveCourtCase() {
+    const title = document.getElementById('courtTitle').value;
+    const defendant = document.getElementById('courtDef').value;
+    const charges = document.getElementById('courtCharges').value;
+    const evidence = document.getElementById('courtEvidence').value;
+
+    if(!title || !defendant) return alert("Titel und Angeklagter fehlen!");
+
+    const caseData = {
+        title: title,
+        defendant: defendant,
+        charges: charges,
+        evidence: evidence,
+        prosecutor: currentUser.username,
+        judge: "Noch nicht zugewiesen",
+        status: "OFFEN", // OFFEN, TERMINIERT, GESCHLOSSEN
+        verdict: "",
+        courtDate: "",
+        createdAt: new Date().toISOString()
+    };
+
+    db.collection("court_cases").add(caseData).then(() => {
+        alert("Fall wurde beim DoJ eingereicht!");
+        closeModal('addCourtModal');
+        loadCourtCases();
+    });
+}
+
+function loadCourtCases() {
+    const container = document.getElementById('courtCaseList');
+    container.innerHTML = 'Lade Fälle...';
+
+    db.collection("court_cases").orderBy("createdAt", "desc").get().then(snap => {
+        container.innerHTML = '';
+        snap.forEach(doc => {
+            const c = doc.data();
+            const id = doc.id;
+            
+            // Status-Farben
+            let statusBadge = 'bg-info';
+            if(c.status === 'GESCHLOSSEN') statusBadge = 'bg-success';
+            if(c.status === 'TERMINIERT') statusBadge = 'bg-warning text-dark';
+
+            container.innerHTML += `
+                <div class="col-md-6 mb-3">
+                    <div class="card p-3 border-start border-warning border-4">
+                        <div class="d-flex justify-content-between">
+                            <h5>${c.title}</h5>
+                            <span class="badge ${statusBadge}">${c.status}</span>
+                        </div>
+                        <p class="small mb-1"><b>Angeklagter:</b> ${c.defendant}</p>
+                        <p class="small mb-1 text-muted"><b>Anklage:</b> ${c.charges.substring(0, 50)}...</p>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small>Richter: ${c.judge}</small>
+                            <button class="btn btn-sm btn-outline-warning" onclick="viewCaseDetail('${id}')">Details</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+// Navigations-Update: Wenn 'court' geklickt wird, lade die Liste
+const originalNav = nav;
+nav = function(id) {
+    originalNav(id);
+    if(id === 'court') loadCourtCases();
+};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>   
