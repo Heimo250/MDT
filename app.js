@@ -64,30 +64,36 @@ function closeModal() {
 
 // Hilfsfunktion zum Seitenwechsel
 function showPage(pageId) {
-    // Alle Seiten ausblenden
+    console.log("Wechsle zu Seite:", pageId);
+
+    // 1. Alle Seiten ausblenden
     const pages = document.querySelectorAll('.page');
     pages.forEach(p => p.classList.add('hidden'));
 
-    // Zielseite anzeigen
+    // 2. Zielseite finden und anzeigen
     const targetPage = document.getElementById('page-' + pageId);
     if (targetPage) {
         targetPage.classList.remove('hidden');
     } else {
-        console.error("Seite nicht gefunden: page-" + pageId);
+        console.warn(`WARNUNG: Element mit ID 'page-${pageId}' wurde im HTML nicht gefunden!`);
+        return; // Stoppe hier, um Folgefehler zu vermeiden
+    }
+
+    // 3. Daten laden (nur wenn die Funktionen auch wirklich existieren)
+    if (pageId === 'reports' && typeof loadReports === 'function') {
+        loadReports();
+    } else if (pageId === 'reports') {
+        console.error("Fehler: loadReports ist nicht definiert!");
+    }
+
+    if (pageId === 'employees' && typeof renderEmployeePanel === 'function') {
+        renderEmployeePanel();
+    } else if (pageId === 'employees') {
+        console.error("Fehler: renderEmployeePanel ist nicht definiert!");
     }
     
-    // Daten laden je nach Seite
-    if(pageId === 'reports') loadReports();
-    if(pageId === 'employees') renderEmployeePanel();
-    if(pageId === 'persons') searchPerson(); // Zeigt Initialliste
-}
-
-// Modals schließen
-function closeModal() {
-    document.getElementById('modal-person').classList.add('hidden');
-    document.getElementById('modal-vehicle').classList.add('hidden');
-    if(document.getElementById('modal-report')) {
-        document.getElementById('modal-report').classList.add('hidden');
+    if (pageId === 'persons' && typeof searchPerson === 'function') {
+        searchPerson();
     }
 }
 
@@ -256,4 +262,21 @@ async function exportToPDF(personId) {
     doc.text(`AKTE: ${p.firstname} ${p.lastname}`, 10, 10);
     doc.text(`Status: ${p.tags.join(', ')}`, 10, 20);
     doc.save(`Akte_${p.lastname}.pdf`);
+}
+// PLATZHALTER FÜR BERICHTE
+async function loadReports() {
+    const container = document.getElementById('report-list');
+    if (!container) return console.error("HTML-Element 'report-list' fehlt!");
+    
+    container.innerHTML = "<p class='p-4 text-slate-500'>Lade Berichte...</p>";
+    // Hier kommt später dein Firebase-Abruf rein
+}
+
+// PLATZHALTER FÜR BEAMTE
+async function renderEmployeePanel() {
+    const container = document.getElementById('employee-list');
+    if (!container) return console.error("HTML-Element 'employee-list' fehlt!");
+
+    container.innerHTML = "<p class='p-4 text-slate-500'>Lade Beamtenliste...</p>";
+    // Hier kommt später dein Firebase-Abruf rein
 }
