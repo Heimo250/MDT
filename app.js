@@ -13,6 +13,37 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// Hilfsfunktion zum Seitenwechsel
+function showPage(pageId) {
+    // Alle Seiten ausblenden
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(p => p.classList.add('hidden'));
+
+    // Zielseite anzeigen
+    const targetPage = document.getElementById('page-' + pageId);
+    if (targetPage) {
+        targetPage.classList.remove('hidden');
+    } else {
+        console.error("Seite nicht gefunden: page-" + pageId);
+    }
+    
+    // Daten laden je nach Seite
+    if(pageId === 'reports') loadReports();
+    if(pageId === 'employees') renderEmployeePanel();
+    if(pageId === 'persons') searchPerson(); // Zeigt Initialliste
+}
+
+// Modals schließen
+function closeModal() {
+    document.getElementById('modal-person').classList.add('hidden');
+    document.getElementById('modal-vehicle').classList.add('hidden');
+    if(document.getElementById('modal-report')) {
+        document.getElementById('modal-report').classList.add('hidden');
+    }
+}
+
+
+
 // ==========================================
 // 2. GLOBALE VARIABLEN & AUTH
 // ==========================================
