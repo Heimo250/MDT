@@ -13,6 +13,34 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// Falls searchPerson fehlt:
+async function searchPerson() {
+    const term = document.getElementById('search-person-input').value.toLowerCase();
+    const resultsDiv = document.getElementById('person-results');
+    if (!resultsDiv) return;
+
+    const snapshot = await db.collection('persons')
+        .where('lastname', '>=', term)
+        .where('lastname', '<=', term + '\uf8ff')
+        .limit(10).get();
+
+    resultsDiv.innerHTML = "";
+    snapshot.forEach(doc => {
+        const p = doc.data();
+        resultsDiv.innerHTML += `
+            <div class="card p-4 border-l-4 ${p.tags.includes('Wanted') ? 'border-red-600' : 'border-blue-600'}">
+                <h4 class="font-bold">${p.firstname} ${p.lastname}</h4>
+                <button onclick="exportToPDF('${doc.id}')" class="text-[10px] bg-slate-700 p-1 rounded mt-2">Export PDF</button>
+            </div>`;
+    });
+}
+
+// Falls openReportModal fehlt:
+function openReportModal() {
+    const modal = document.getElementById('modal-report');
+    if (modal) modal.classList.remove('hidden');
+}
+
 // Universelle Funktion zum Schließen aller Modals
 function closeModal() {
     // Liste aller Modal-IDs
