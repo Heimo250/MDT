@@ -13,6 +13,27 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// Universelle Funktion zum Schließen aller Modals
+function closeModal() {
+    // Liste aller Modal-IDs
+    const modals = ['modal-person', 'modal-vehicle', 'modal-report'];
+    
+    modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    });
+    
+    // Optional: Formularfelder nach dem Schließen leeren
+    selectedTags = []; 
+    // Setzt die Optik der Tag-Buttons zurück
+    document.querySelectorAll('.tag-btn').forEach(btn => {
+        btn.style.backgroundColor = "";
+        btn.style.color = "";
+    });
+}
+
 // Hilfsfunktion zum Seitenwechsel
 function showPage(pageId) {
     // Alle Seiten ausblenden
