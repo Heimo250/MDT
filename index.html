@@ -543,8 +543,188 @@ Maßnahmen:
         
         alert(`Mitarbeiter ${username} als ${rank} registriert (Datenbank). \n\nHINWEIS: Authentication Account muss separat erstellt werden.`);
     }
+// --- ERGÄNZUNG: VARIABLEN ---
+    let currentPersonId = null; // Speichert, welche Person gerade angesehen wird
 
+    // --- FUNKTIONEN FÜR FAHRZEUGE ---
+    
+    function showAddVehicleModal() {
+        document.getElementById('addVehicleModal').style.display = 'block';
+    }
+
+    function saveNewVehicle() {
+        const ownerName = document.getElementById('vehOwner').value;
+        const plate = document.getElementById('vehPlate').value;
+        const model = document.getElementById('vehModel').value;
+        const color = document.getElementById('vehColor').value;
+        const hasMods = document.getElementById('vehMods').checked;
+
+        if(!ownerName || !plate || !model) return alert("Bitte Besitzer, Kennzeichen und Modell ausfüllen!");
+
+        // 1. Besitzer im Register suchen (Abgleich)
+        db.collection("citizens").where("name", "==", ownerName).limit(1).get()
+        .then((snapshot) => {
+            if (snapshot.empty) {
+                alert("FEHLER: Dieser Besitzer existiert nicht im Personenregister! Bitte erst Person anlegen.");
+                return;
+            }
+
+            const ownerDoc = snapshot.docs[0];
+            const ownerId = ownerDoc.id;
+
+            // 2. Fahrzeug speichern
+            const vehicleData = {
+                plate: plate,
+                model: model,
+                color: color,
+                ownerName: ownerName,
+                ownerId: ownerId, // Verknüpfung zur ID
+                hasMods: hasMods,
+                registeredBy: currentUser.username,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection("vehicles").add(vehicleData).then(() => {
+                alert("Fahrzeug erfolgreich registriert!");
+                closeModal('addVehicleModal');
+                
+                // Falls wir gerade im Fahrzeug-Tab sind, Liste neu laden (optional)
+                // loadVehicleList(); 
+                
+                // Eintrag in die Akte des Besitzers schreiben (optional, wie gewünscht)
+                db.collection("citizens").doc(ownerId).collection("history").add({
+                    text: `Fahrzeug registriert: ${model} (${plate})`,
+                    date: new Date().toISOString(),
+                    type: "VEHICLE"
+                });
+            });
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("Fehler beim Speichern: " + error.message);
+        });
+    }
+
+    // --- FUNKTIONEN FÜR AKTEN (RECORDS) ---
+
+    // Diese Funktion wird aufgerufen, wenn man auf "Eintrag hinzufügen" in einer Personenkakte klickt
+    function addRecordEntry() {
+        if(!currentPersonId) return alert("Keine Person ausgewählt!");
+        document.getElementById('addRecordModal').style.display = 'block';
+    }
+
+    function saveRecord() {
+        if(!currentPersonId) return;
+
+        const title = document.getElementById('recTitle').value;
+        const details = document.getElementById('recDetails').value;
+        const fine = document.getElementById('recFine').value || 0;
+        const jail = document.getElementById('recJail').value || 0;
+
+        const recordData = {
+            title: title,
+            details: details,
+            fine: parseInt(fine),
+            jail: parseInt(jail),
+            officer: currentUser.username,
+            date: new Date().toISOString(),
+            type: "CRIME" // oder "NOTE"
+        };
+
+        // Speichern in einer Unter-Sammlung 'records' der Person
+        db.collection("citizens").doc(currentPersonId).collection("records").add(recordData)
+        .then(() => {
+            alert("Akte aktualisiert!");
+            closeModal('addRecordModal');
+            // Ansicht aktualisieren
+            loadPersonDetailsLogic(currentPersonId); 
+        });
+    }
+
+    // --- HILFSFUNKTION: PERSON DETAILS LADEN (Muss die alte Logik ersetzen/erweitern) ---
+    // Ersetze die Stelle im alten Code wo "loadPersonDetails" steht hiermit, 
+    // oder füge dies hinzu, damit die Akten auch angezeigt werden.
+
+    function globalSearch(query, type) {
+        if(query.length < 3) return; // Erst ab 3 Buchstaben suchen
+        
+        if(type === 'person') {
+            // Einfache Suche (Case Sensitive in Firebase ist schwierig, daher hier vereinfacht)
+            // Ein echter Production-Code bräuchte ein extra Suchfeld "searchName" in Kleinbuchstaben.
+            db.collection("citizens").where("name", ">=", query).where("name", "<=", query + "\uf8ff").get()
+            .then(snap => {
+                // Hier könnte man eine Suchergebnis-Liste anzeigen.
+                // Für dieses Beispiel öffnen wir direkt den ersten Treffer:
+                if(!snap.empty) {
+                    const doc = snap.docs[0];
+                    openPersonDetail(doc.id, doc.data());
+                }
+            });
+        }
+    }
+
+    function openPersonDetail(id, data) {
+        currentPersonId = id; // WICHTIG: ID global setzen
+        
+        document.getElementById('view-dashboard').classList.add('hidden');
+        document.getElementById('view-citizens').classList.remove('hidden');
+        document.getElementById('personDetail').classList.remove('hidden');
+
+        // UI füllen
+        document.getElementById('pDetailName').innerText = data.name;
+        document.getElementById('pDetailDob').innerText = data.dob;
+        document.getElementById('pDetailHeight').innerText = data.height;
+        document.getElementById('pDetailPhone').innerText = data.phone;
+        if(data.photo) document.getElementById('pDetailPhoto').src = data.photo;
+
+        // Tags anzeigen
+        const tagContainer = document.getElementById('pDetailTags');
+        tagContainer.innerHTML = '';
+        if(data.tags) {
+            data.tags.forEach(tag => {
+                let badgeClass = 'bg-secondary';
+                if(tag === 'Wanted') badgeClass = 'bg-danger';
+                if(tag.includes('License')) badgeClass = 'bg-success';
+                tagContainer.innerHTML += `<span class="badge ${badgeClass} me-1">${tag}</span>`;
+            });
+        }
+
+        loadPersonRecords(id);
+    }
+
+    function loadPersonRecords(id) {
+        const list = document.getElementById('recordList');
+        list.innerHTML = '<div class="spinner-border text-light" role="status"></div>';
+        
+        db.collection("citizens").doc(id).collection("records").orderBy("date", "desc").get()
+        .then(snap => {
+            list.innerHTML = '';
+            if(snap.empty) {
+                list.innerHTML = '<p class="text-muted">Keine Einträge vorhanden.</p>';
+                return;
+            }
+            
+            snap.forEach(doc => {
+                const r = doc.data();
+                const dateStr = new Date(r.date).toLocaleString();
+                list.innerHTML += `
+                    <div class="card p-2 mb-2 border-start border-danger border-4" style="background: #2c2c2c;">
+                        <div class="d-flex justify-content-between">
+                            <strong>${r.title}</strong>
+                            <small class="text-muted">${dateStr}</small>
+                        </div>
+                        <p class="mb-1 small">${r.details}</p>
+                        <div class="small">
+                            <span class="text-danger">Strafe: $${r.fine}</span> | 
+                            <span class="text-warning">Haft: ${r.jail} Mon.</span> |
+                            <span class="text-info">Officer: ${r.officer}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+</body>   
 </html>
