@@ -2,12 +2,12 @@
 // 1. FIREBASE INITIALISIERUNG
 // ==========================================
 const firebaseConfig = {
-    apiKey: "DEIN_API_KEY",
-    authDomain: "DEIN_PROJEKT.firebaseapp.com",
-    projectId: "DEIN_PROJEKT",
-    storageBucket: "DEIN_PROJEKT.appspot.com",
-    messagingSenderId: "DEINE_ID",
-    appId: "DEINE_APP_ID"
+  apiKey: "AIzaSyCGzYuktvsFcmU5pnBtWzso_eFbTcG6oPQ",
+  authDomain: "mdt-by-heimo.firebaseapp.com",
+  projectId: "mdt-by-heimo",
+  storageBucket: "mdt-by-heimo.firebasestorage.app",
+  messagingSenderId: "539623345312",
+  appId: "1:539623345312:web:9b142cfd0e3402972f4dc5"
 };
 
 firebase.initializeApp(firebaseConfig);
